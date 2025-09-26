@@ -1,0 +1,223 @@
+// Student Portal Database Schema
+// This schema defines all the models for the student portal application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  LATE
+  GRADED
+}
+
+enum GradeStatus {
+  PENDING
+  GRADED
+  RETURNED
+}
+
+// Core Models
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // Will be hashed
+  role      Role     @default(STUDENT)
+  avatar    String?  // URL to profile picture
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  enrollments      Enrollment[]
+  submissions      Submission[]
+  grades           Grade[]
+  sentMessages     Message[]     @relation("MessageSender")
+  receivedMessages Message[]     @relation("MessageReceiver")
+  notifications    Notification[]
+
+  @@map("users")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique // e.g., "CS101", "MATH201"
+  description String?
+  instructor  String   // Instructor name
+  credits     Int      @default(3)
+  semester    String   // e.g., "Fall 2024"
+  year        Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  enrollments    Enrollment[]
+  assignments    Assignment[]
+  announcements  Announcement[]
+  materials      CourseMaterial[]
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  enrolledAt DateTime @default(now())
+  status    String   @default("ACTIVE") // ACTIVE, DROPPED, COMPLETED
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model Assignment {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  instructions String?
+  dueDate     DateTime
+  maxPoints   Float    @default(100)
+  courseId    String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+  attachments AssignmentAttachment[]
+
+  @@map("assignments")
+}
+
+model AssignmentAttachment {
+  id           String @id @default(cuid())
+  assignmentId String
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@map("assignment_attachments")
+}
+
+model Submission {
+  id           String           @id @default(cuid())
+  content      String?          // Text submission
+  fileUrl      String?          // File submission URL
+  fileName     String?          // Original file name
+  submittedAt  DateTime         @default(now())
+  status       SubmissionStatus @default(SUBMITTED)
+  isLate       Boolean          @default(false)
+  studentId    String
+  assignmentId String
+
+  // Relations
+  student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  grades    Grade[]
+
+  @@unique([studentId, assignmentId])
+  @@map("submissions")
+}
+
+model Grade {
+  id           String      @id @default(cuid())
+  score        Float
+  maxScore     Float
+  feedback     String?
+  status       GradeStatus @default(PENDING)
+  gradedAt     DateTime?
+  studentId    String
+  submissionId String
+
+  // Relations
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("grades")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  courseId  String
+  authorId  String   // User ID of who created it
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("announcements")
+}
+
+model CourseMaterial {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileName    String
+  fileSize    Int
+  courseId    String
+  uploadedAt  DateTime @default(now())
+
+  // Relations
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("course_materials")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  senderId    String
+  receiverId  String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  sender   User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // ASSIGNMENT, GRADE, ANNOUNCEMENT, MESSAGE
+  isRead    Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
