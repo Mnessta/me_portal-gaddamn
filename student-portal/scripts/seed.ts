@@ -51,7 +51,7 @@ async function main() {
     create: {
       name: 'Introduction to Computer Science',
       code: 'CS101',
-      description: 'Fundamental concepts of computer science and programming',
+      description: 'This course introduces fundamental concepts of computer science and programming. Students will learn about algorithms, data structures, programming paradigms, and software engineering principles. Topics include variables, control structures, functions, arrays, object-oriented programming, and basic algorithms. The course emphasizes problem-solving skills and computational thinking. Students will complete several programming assignments and a final project.',
       instructor: 'Dr. Sarah Johnson',
       credits: 3,
       semester: 'Fall 2024',
@@ -65,7 +65,7 @@ async function main() {
     create: {
       name: 'Calculus II',
       code: 'MATH201',
-      description: 'Advanced calculus concepts and applications',
+      description: 'This course covers advanced calculus topics including techniques of integration, applications of integration, sequences and series, power series, and Taylor series. Students will learn to solve complex integration problems, understand convergence of series, and apply calculus concepts to real-world problems. The course builds upon Calculus I and prepares students for advanced mathematics courses.',
       instructor: 'Dr. Michael Brown',
       credits: 4,
       semester: 'Fall 2024',
@@ -217,6 +217,58 @@ async function main() {
   }
 
   console.log('✅ Notifications created')
+
+  // Create course materials
+  const courseMaterials = [
+    {
+      title: 'Course Syllabus',
+      description: 'Complete course syllabus and learning objectives',
+      fileUrl: '/materials/syllabus.pdf',
+      fileName: 'CS101_Syllabus.pdf',
+      fileSize: 1024000,
+      courseId: course1.id,
+    },
+    {
+      title: 'Programming Fundamentals Slides',
+      description: 'Introduction to programming concepts and syntax',
+      fileUrl: '/materials/programming-fundamentals.pdf',
+      fileName: 'Programming_Fundamentals.pdf',
+      fileSize: 2048000,
+      courseId: course1.id,
+    },
+    {
+      title: 'Data Structures Reference',
+      description: 'Comprehensive guide to data structures and algorithms',
+      fileUrl: '/materials/data-structures.pdf',
+      fileName: 'Data_Structures_Reference.pdf',
+      fileSize: 3072000,
+      courseId: course1.id,
+    },
+    {
+      title: 'Mathematics for Computer Science',
+      description: 'Mathematical foundations and discrete mathematics',
+      fileUrl: '/materials/math-foundations.pdf',
+      fileName: 'Math_Foundations.pdf',
+      fileSize: 1536000,
+      courseId: course2.id,
+    },
+    {
+      title: 'Linear Algebra Notes',
+      description: 'Vector spaces, matrices, and linear transformations',
+      fileUrl: '/materials/linear-algebra.pdf',
+      fileName: 'Linear_Algebra_Notes.pdf',
+      fileSize: 2560000,
+      courseId: course2.id,
+    },
+  ]
+
+  for (const material of courseMaterials) {
+    await prisma.courseMaterial.create({
+      data: material,
+    })
+  }
+
+  console.log('✅ Course materials created')
 
   console.log('🎉 Database seeding completed successfully!')
 }

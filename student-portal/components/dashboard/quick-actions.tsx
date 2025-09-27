@@ -17,7 +17,7 @@ import Link from 'next/link'
 export function QuickActions() {
   const actions = [
     {
-      title: 'All Courses',
+      title: 'Browse Courses',
       icon: BookOpen,
       href: '/courses',
       color: 'bg-blue-500 hover:bg-blue-600'
